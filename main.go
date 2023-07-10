@@ -12,31 +12,33 @@ type results struct {
 }
 
 func main() {
-	var numsChan = make(chan int)
+	var numsChan = make(chan []int)
 	var resultsChan = make(chan results)
-	var nums []int
 
-	for i := 0; i <= 100; i++ {
-		go func() {
-			select {
-			case res := <-resultsChan:
-				fmt.Printf("\nMax: %d, Min: %d", res.Max, res.Min)
-			default:
-				numsChan <- rand.Intn(100)
-			}
-		}()
+	go func() {
 
-		go func() {
-			num := <-numsChan
-			nums = append(nums, num)
-			max, min := minMax(nums)
-			res := results{
-				Max: max,
-				Min: min,
-			}
-			resultsChan <- res
-		}()
-	}
+		var randNums []int
+
+		for i := 0; i < 10; i++ {
+			randNums = append(randNums, rand.Intn(100))
+		}
+
+		numsChan <- randNums
+		time.Sleep(10 * time.Millisecond)
+
+		res := <-resultsChan
+		fmt.Printf("\nMax: %d, Min: %d", res.Max, res.Min)
+	}()
+
+	go func() {
+		nums := <-numsChan
+		max, min := minMax(nums)
+		res := results{
+			Max: max,
+			Min: min,
+		}
+		resultsChan <- res
+	}()
 
 	time.Sleep(2 * time.Second)
 }
